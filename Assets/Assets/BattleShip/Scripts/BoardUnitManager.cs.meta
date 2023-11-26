@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7a37e0e1f3bbe9a4e90887e512a5ea8c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - BoardUnitPrefab: {instanceID: 0}
+  - BoardUnitAttackPrefab: {instanceID: 0}
+  - BlockVisualizerPrefab: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
