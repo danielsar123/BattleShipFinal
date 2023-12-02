@@ -7,6 +7,7 @@ using UnityEngine.UIElements;
 
 public class BoardUnitManager : MonoBehaviour
 {
+    public GameObject bomb;
     public CamerasController controller;
     public delegate void BoardPiecePlaced(int id);
     public static event BoardPiecePlaced OnBoardPiecePlaced;
@@ -138,6 +139,12 @@ public class BoardUnitManager : MonoBehaviour
                     Debug.Log("Clicked on an enemy board unit!");
                     enemyUnit.ProcessHit(); // Process the hit on the enemy unit
 
+                    // Instantiate the bomb at the clicked position
+                    Vector3 bombPosition = new Vector3(hit.point.x, 9, hit.point.z); // Adjust the Y value as needed
+                    Instantiate(bomb, bombPosition, Quaternion.identity);
+
+                
+
                     // Check if a ship has been hit and if it has sunk
                     Ship hitShip = boardEnemy.CheckHit(enemyUnit.row, enemyUnit.col);
                     if (hitShip != null)
@@ -170,6 +177,7 @@ public class BoardUnitManager : MonoBehaviour
             }
         }
     }
+
     private void PlacePlayerPieces()
     {
         // capture the mouse position and cast a ray to see what object we hit
