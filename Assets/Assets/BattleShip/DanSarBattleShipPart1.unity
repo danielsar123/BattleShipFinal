@@ -971,6 +971,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a37e0e1f3bbe9a4e90887e512a5ea8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  fire: {fileID: 7644518304100832753, guid: a1964b3aebb220343a9f54aa07d3c701, type: 3}
   bomb: {fileID: 6505398124127139798, guid: 6061f96647ffaab41b20ae94f48dec6b, type: 3}
   controller: {fileID: 1812668127}
   BoardUnitPrefab: {fileID: 1721956133909825588, guid: 37725cf8a4f823847aff8ef26388a8e4,

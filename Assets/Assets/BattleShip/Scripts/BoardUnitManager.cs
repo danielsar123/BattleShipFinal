@@ -7,6 +7,7 @@ using UnityEngine.UIElements;
 
 public class BoardUnitManager : MonoBehaviour
 {
+    public GameObject fire;
     public GameObject bomb;
     public CamerasController controller;
     public delegate void BoardPiecePlaced(int id);
@@ -147,6 +148,12 @@ public class BoardUnitManager : MonoBehaviour
 
                     // Check if a ship has been hit and if it has sunk
                     Ship hitShip = boardEnemy.CheckHit(enemyUnit.row, enemyUnit.col);
+                    if (hitShip != null && !hitShip.IsSunk())
+                    {
+                        // Instantiate fire prefab on the hit ship's position
+                        // Instantiate the fire VFX with a delay
+                        StartCoroutine(InstantiateFireVFX(hit.transform.position));
+                    }
                     if (hitShip != null)
                     {
                         if (hitShip.IsSunk())
@@ -176,6 +183,15 @@ public class BoardUnitManager : MonoBehaviour
                 Debug.Log("Raycast didn't hit anything when clicked.");
             }
         }
+    }
+
+    private IEnumerator InstantiateFireVFX(Vector3 position)
+    {
+        // Wait for a second
+        yield return new WaitForSeconds(1.2f);
+
+        // Instantiate the fire VFX
+        Instantiate(fire, position, Quaternion.identity);
     }
 
     private void PlacePlayerPieces()
