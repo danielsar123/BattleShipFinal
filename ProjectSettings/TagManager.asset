@@ -3,7 +3,11 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - BoardUnit
+  - CubePrefab
+  - PlayerBoardUnit
+  - ShipButton
   layers:
   - Default
   - TransparentFX

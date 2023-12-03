@@ -92,6 +92,17 @@ public class UIManager : MonoBehaviour
         UpdateOrientationUI();
     }
 
+
+    public void EnablePieceButtonsForAttackPhase()
+    {
+       butOrientation.gameObject.SetActive(false);
+        // Loop through all buttons and only enable those with the "ShipButton" tag
+        foreach (var button in collectionOfPlayersPieceButtons)
+        {
+            button.gameObject.SetActive(true);
+        }
+    }
+
     void UpdateOrientationUI()
     {
         if (Orientation)

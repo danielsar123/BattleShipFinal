@@ -9,7 +9,9 @@ public class BoardUnitManager : MonoBehaviour
 {
     public GameObject fire;
     public GameObject bomb;
+    public UIManager uiManager;
     public CamerasController controller;
+    public ShipPanelManager shipPanelManager;
     public delegate void BoardPiecePlaced(int id);
     public static event BoardPiecePlaced OnBoardPiecePlaced;
     public GameObject BoardUnitPrefab;
@@ -92,6 +94,7 @@ public class BoardUnitManager : MonoBehaviour
 
     public void StartAttackPlayer()
     {
+        uiManager.EnablePieceButtonsForAttackPhase();
         isAttackPhase = true;
     }
     void Update()
@@ -159,6 +162,7 @@ public class BoardUnitManager : MonoBehaviour
                         if (hitShip.IsSunk())
                         {
                             Debug.Log($"{hitShip.Name} has been sunk!");
+                            shipPanelManager.UpdateShipPanel(hitShip.Name, true);
                             // Perform any additional actions needed when a ship is sunk
                         }
                         else
@@ -194,12 +198,11 @@ public class BoardUnitManager : MonoBehaviour
         Instantiate(fire, position, Quaternion.identity);
     }
 
+
     private void PlacePlayerPieces()
     {
-        // capture the mouse position and cast a ray to see what object we hit
+       
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-
 
         if (Input.mousePosition != null)
         {
@@ -228,60 +231,36 @@ public class BoardUnitManager : MonoBehaviour
                         tmpBlockHolder = new GameObject();
                         OK_TO_PLACE = true;
 
-                        if (!Vertical && (tmpUI.row <= 10 - ShipSize))
+                        // Visualization logic for placing the ship...
+                        for (int i = 0; i < ShipSize; i++)
                         {
-                            for (int i = 0; i < ShipSize; i++)
-                            {
-                                GameObject visual = GameObject.Instantiate(BlockVisualizerPrefab, new Vector3(tmpUI.row + i,
-                                    BlockVisualizerPrefab.transform.position.y, tmpUI.col), BlockVisualizerPrefab.transform.rotation) as GameObject;
-                                GameObject bp = boardPlayer.board[tmpUI.row + i, tmpUI.col];
-                                BoardUnit bpUI = bp.GetComponentInChildren<BoardUnit>();
-                                if (!bpUI.occupied)
-                                {
-                                    visual.GetComponent<Renderer>().material.color = Color.grey;
-                                }
-                                else
-                                {
-                                    //visual.transform.localScale = new Vector3(0.6f, 0.6f, 0.6f);
-                                    visual.GetComponent<Renderer>().material.color = Color.yellow; //not ok
-                                    OK_TO_PLACE = false;
-                                }
+                            int row = Vertical ? tmpUI.row : tmpUI.row + i;
+                            int col = Vertical ? tmpUI.col + i : tmpUI.col;
 
-                                visual.transform.parent = this.tmpBlockHolder.transform;
+                            if (row >= 10 || col >= 10) continue; // Skip if outside board bounds
+
+                            GameObject visual = GameObject.Instantiate(BlockVisualizerPrefab, new Vector3(row, BlockVisualizerPrefab.transform.position.y, col), BlockVisualizerPrefab.transform.rotation);
+                            BoardUnit bpUI = boardPlayer.board[row, col].GetComponentInChildren<BoardUnit>();
+
+                            if (!bpUI.occupied)
+                            {
+                                visual.GetComponent<Renderer>().material.color = Color.gray; // okay to place
                             }
-                        }
-                        if (Vertical && (tmpUI.col <= 10 - ShipSize))
-                        {
-
-                            for (int i = 0; i < ShipSize; i++)
+                            else
                             {
-
-                                GameObject visual = GameObject.Instantiate(BlockVisualizerPrefab, new Vector3(tmpUI.row,
-                                    BlockVisualizerPrefab.transform.position.y, tmpUI.col + i), BlockVisualizerPrefab.transform.rotation) as GameObject;
-                                GameObject bp = boardPlayer.board[tmpUI.row, tmpUI.col + i];
-                                BoardUnit bpUI = bp.GetComponentInChildren<BoardUnit>();
-                                if (!bpUI.occupied)
-                                {
-                                    visual.GetComponent<Renderer>().material.color = Color.gray; //okay to place
-                                }
-                                else
-                                {
-                                    //visual.transform.localScale = new Vector3(0.6f, 0.6f, 0.6f);
-                                    visual.GetComponent<Renderer>().material.color = Color.yellow; //not ok
-                                    OK_TO_PLACE = false;
-                                }
-                                visual.transform.parent = this.tmpBlockHolder.transform;
+                                visual.GetComponent<Renderer>().material.color = Color.yellow; // not ok
+                                OK_TO_PLACE = false;
                             }
 
+                            visual.transform.parent = tmpBlockHolder.transform;
                         }
-
                     }
                 }
             }
         }
+
         if (Input.GetMouseButton(0))
         {
-            // capture the mouse position and cast a ray to see what object we hit
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit, 100))
@@ -290,57 +269,48 @@ public class BoardUnitManager : MonoBehaviour
                 {
                     BoardUnit tmpUI = hit.transform.GetComponentInChildren<BoardUnit>();
 
-                    if (PLACE_BLOCK && OK_TO_PLACE)
+                    if (PLACE_BLOCK && OK_TO_PLACE && CanPlaceShip(tmpUI.row, tmpUI.col, Vertical, ShipSize))
                     {
-                        if (!Vertical)
+                        // Place the ship on the board
+                        for (int i = 0; i < ShipSize; i++)
                         {
-                            for (int i = 0; i < ShipSize; i++)
-                            {
-                                GameObject sB = boardPlayer.board[tmpUI.row + i, tmpUI.col];
+                            int row = Vertical ? tmpUI.row : tmpUI.row + i;
+                            int col = Vertical ? tmpUI.col + i : tmpUI.col;
 
-                                BoardUnit bu = sB.transform.GetComponentInChildren<BoardUnit>();
-                                bu.occupied = true;
-                                //     bu.CubePrefab.gameObject.GetComponent<MeshRenderer>().material.color = Color.green;
-                                //    bu.CubePrefab.gameObject.SetActive(true);
-                                bu.GetComponent<MeshRenderer>().material.color = Color.green;
-                                boardPlayer.board[tmpUI.row + i, tmpUI.col] = sB;
-
-                            }
+                            GameObject sB = boardPlayer.board[row, col];
+                            BoardUnit bu = sB.transform.GetComponentInChildren<BoardUnit>();
+                            bu.occupied = true;
+                            bu.GetComponent<MeshRenderer>().material.color = Color.green;
+                            boardPlayer.board[row, col] = sB;
                         }
 
-                        if (Vertical)
-                        {
-                            for (int i = 0; i < ShipSize; i++)
-                            {
-                                GameObject sB = boardPlayer.board[tmpUI.row, tmpUI.col + i];
-
-                                BoardUnit bu = sB.transform.GetComponentInChildren<BoardUnit>();
-                                bu.occupied = true;
-                                bu.GetComponent<MeshRenderer>().material.color = Color.green;
-
-                                boardPlayer.board[tmpUI.row, tmpUI.col + i] = sB;
-
-                            }
-                        }
-                        // check which ship was placed
-                        CheckWhichShipWasPlaced(tmpUI.row, tmpUI.col);
-
+                        CheckWhichShipWasPlaced(tmpUI.row, tmpUI.col); // Existing logic for checking which ship is placed
                         OK_TO_PLACE = true;
                         tmpHighlight = null;
                     }
-                    // check and destroy the temp block holder
-                    // this is used to destroy the last tmp blocks after we have placed the last block group on board
-                    if (count >= 5)
+                    if (count >= 5 && tmpBlockHolder != null)
                     {
-                        if (tmpBlockHolder != null)
-                        {
-                            Destroy(tmpBlockHolder);
-                        }
+                        Destroy(tmpBlockHolder);
                     }
                 }
             }
         }
+    }
 
+    // New method to check if a ship can be placed
+    private bool CanPlaceShip(int startRow, int startCol, bool vertical, int shipSize)
+    {
+        for (int i = 0; i < shipSize; i++)
+        {
+            int checkRow = vertical ? startRow : startRow + i;
+            int checkCol = vertical ? startCol + i : startCol;
+
+            if (checkRow >= 10 || checkCol >= 10) return false; // Check for board bounds
+
+            BoardUnit unit = boardPlayer.board[checkRow, checkCol].GetComponentInChildren<BoardUnit>();
+            if (unit.occupied) return false; // Check if the position is already occupied
+        }
+        return true; // All positions are free
     }
     private void CheckWhichShipWasPlaced(int row, int col)
     {
