@@ -1,14 +1,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.Burst.CompilerServices;
 using Unity.VisualScripting;
 using UnityEditor.Build.Content;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.UIElements;
 
 public class BoardUnitManager : MonoBehaviour
 {
+    public int playerSunkShips = 0;
+    public TextMeshProUGUI playerScoreText;
+    public TextMeshProUGUI enemyScoreText;
     public GameObject fire;
     public GameObject bomb;
     public UIManager uiManager;
@@ -23,6 +28,10 @@ public class BoardUnitManager : MonoBehaviour
     public BoardPlayer boardPlayer;
     public BoardAI boardEnemy;
     public List<Ship> playerShips = new List<Ship>();
+    public int enemySunkShips = 0;
+    private int originalFontSize;
+    public AudioSource audioSource;
+    public AudioClip popSoundEffect;
 
     // public int[] ShipSizes = { 2, 3, 3, 4, 5 };
     public int ShipSize = 2;
@@ -84,8 +93,8 @@ public class BoardUnitManager : MonoBehaviour
     {
         // Initialize the enemy board first
         boardEnemy = new BoardAI(BoardUnitAttackPrefab, BlockVisualizerPrefab);
-        
 
+        originalFontSize = 11;
         // Now initialize the player board with a reference to the enemy board
         boardPlayer = new BoardPlayer(BoardUnitPrefab, boardEnemy);
         boardPlayer.CreatePlayerBoard();
@@ -95,6 +104,12 @@ public class BoardUnitManager : MonoBehaviour
 
         currentShipID = 0;
         ShipSize = 0;
+    }
+
+    public enum ScoreType
+    {
+        Player,
+        Enemy
     }
     public void HandleEnemyAttack(BoardUnit targetUnit, Ship hitShip)
     {
@@ -106,6 +121,8 @@ public class BoardUnitManager : MonoBehaviour
             StartCoroutine(InstantiateFireForPlayerShipVFX(targetUnit.transform.position));
             if (hitShip.IsSunk())
             {
+                playerSunkShips++;
+                UpdateUI(ScoreType.Enemy);
                 Debug.Log($"Player{hitShip.Name} has been sunk!");
                 shipPanelManager.UpdateShipPanel(hitShip.Name, true);
                 isAttackPhase = false;
@@ -130,6 +147,29 @@ public class BoardUnitManager : MonoBehaviour
         // Additional logic (e.g., check if the game is over, switch turns, etc.)
     
 }
+    public void UpdateUI(ScoreType scoreType)
+    {
+        TextMeshProUGUI scoreText;
+        // Assuming you have a UI Text or similar to show the scores
+        switch (scoreType)
+        {
+            case ScoreType.Player:
+                scoreText = playerScoreText;
+                playerScoreText.text = $"Player Score: {enemySunkShips}/5";
+                break;
+            case ScoreType.Enemy:
+                scoreText = enemyScoreText;
+                enemyScoreText.text = $"Enemy Score: {playerSunkShips}/5";
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(scoreType), scoreType, null);
+        }
+
+        // Trigger the pop-out effect for the updated score
+        StopCoroutine(PopOutScore(scoreText, scoreType)); // Stop if already running
+        StartCoroutine(PopOutScore(scoreText, scoreType));
+
+    }
 
     public void StartAttackPlayer()
     {
@@ -208,6 +248,8 @@ public class BoardUnitManager : MonoBehaviour
                         StartCoroutine(InstantiateFireVFX(hit.transform.position));
                         if (hitShip.IsSunk())
                         {
+                            enemySunkShips++;
+                            UpdateUI(ScoreType.Player);
                             Debug.Log($"{hitShip.Name} has been sunk!");
                             shipPanelManager.UpdateShipPanel(hitShip.Name, true);
                             isAttackPhase = false;
@@ -516,7 +558,32 @@ public class BoardUnitManager : MonoBehaviour
         currentShipID = -1;
         ShipSize = 0;
     }
+    private IEnumerator PopOutScore(TextMeshProUGUI scoreText, ScoreType scoreType)
+    {
+        int popFontSize = originalFontSize + 60; // The font size to pop out to, adjust as needed
+        float animationTime = 1.3f; // Duration of the animation, adjust as needed
+        float time = 0;
+        audioSource.PlayOneShot(popSoundEffect);
+        // Increase font size instantly
+        if (ScoreType.Player == scoreType)
+        {
+            scoreText.fontSize = popFontSize;
+        }
+        // Animate font size back to original
+        while (time < animationTime)
+        {
+            time += Time.deltaTime;
+            float t = time / animationTime;
 
+            // Lerp font size back to the original font size over time
+            scoreText.fontSize = (int)Mathf.Lerp(popFontSize, originalFontSize, t);
+
+            yield return null; // Wait until the next frame
+        }
+
+        // Ensure the font size is set to the original size when the animation is done
+        scoreText.fontSize = originalFontSize;
+    }
     public static bool IsBusy = false;
     IEnumerator Wait4Me(float seconds = 0.5f)
     {
