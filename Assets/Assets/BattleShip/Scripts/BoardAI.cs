@@ -9,6 +9,9 @@ public class BoardAI : Board
     BoardPlayer playerBoard;
     int[] aiShipSizes = new int[5] { 2, 3, 3, 4, 5 };
     private List<Vector2Int> attackedPositions = new List<Vector2Int>();
+    private enum AttackMode { Hunt, Target }
+    private AttackMode currentMode = AttackMode.Hunt;
+    private List<Vector2Int> targetQueue = new List<Vector2Int>();
     public List<Ship> Ships { get; private set; }
     public BoardAI(GameObject unitPrefab, GameObject prefab)
     {
@@ -102,25 +105,41 @@ public class BoardAI : Board
         bool validAttack = false;
         Vector2Int attackPosition = new Vector2Int();
 
-        while (!validAttack)
+        if (currentMode == AttackMode.Hunt)
         {
-            // Randomly select a position
-            int x = UnityEngine.Random.Range(0, 10);
-            int y = UnityEngine.Random.Range(0, 10);
-            attackPosition = new Vector2Int(x, y);
-
-            // Check if this position has already been attacked
-            if (!attackedPositions.Contains(attackPosition))
+            while (!validAttack)
             {
-                validAttack = true;
+                // Randomly select a position
+                int x = UnityEngine.Random.Range(0, 10);
+                int y = UnityEngine.Random.Range(0, 10);
+                attackPosition = new Vector2Int(x, y);
+
+                // Check if this position has already been attacked
+                if (!attackedPositions.Contains(attackPosition))
+                {
+                    validAttack = true;
+                }
+            }
+            ProcessHit(attackPosition);
+        }
+        else if (currentMode == AttackMode.Target)
+        {
+            attackPosition = targetQueue[0];
+            targetQueue.RemoveAt(0);
+            ProcessHit(attackPosition);
+
+            if (targetQueue.Count == 0)
+            {
+                currentMode = AttackMode.Hunt;
             }
         }
-        ProcessHit(attackPosition);
-        
+
 
         attackedPositions.Add(attackPosition);
         player.PlayerTurn();
     }
+
+
     public void SetPlayerBoard(BoardPlayer playerBoard)
     {
         this.playerBoard = playerBoard;
@@ -135,11 +154,60 @@ public class BoardAI : Board
         {
             targetUnit.ProcessHit(); // You need to define this method in BoardUnit
             Ship hitShip = player.CheckHit(targetUnit.row, targetUnit.col);
+            if (hitShip != null)
+            {
+                // Hit was successful
+                // Add adjacent positions to the target queue
+                AddAdjacentPositionsToQueue(position);
+
+                // If the hit ship is sunk, clear the target queue and switch back to Hunt mode
+                if (hitShip.IsSunk())
+                {
+                    targetQueue.Clear();
+                    currentMode = AttackMode.Hunt;
+                }
+                else
+                {
+                    currentMode = AttackMode.Target;
+                }
+            }
+            else
+            {
+                // If in Target mode and miss, continue with the target queue
+                // If the target queue is empty, switch back to Hunt mode
+                if (currentMode == AttackMode.Target && targetQueue.Count == 0)
+                {
+                    currentMode = AttackMode.Hunt;
+                }
+            }
             player.HandleEnemyAttack(targetUnit, hitShip);
         }
-      ;
+      
     }
+    private void AddAdjacentPositionsToQueue(Vector2Int position)
+    {
+        // Assuming your grid is a 10x10 grid
+        List<Vector2Int> potentialTargets = new List<Vector2Int>
+    {
+        new Vector2Int(position.x - 1, position.y), // Left
+        new Vector2Int(position.x + 1, position.y), // Right
+        new Vector2Int(position.x, position.y - 1), // Down
+        new Vector2Int(position.x, position.y + 1)  // Up
+    };
 
+        foreach (var target in potentialTargets)
+        {
+            // Check if the position is within the grid and not already in the queue or attacked
+            if (IsPositionValid(target) && !targetQueue.Contains(target) && !attackedPositions.Contains(target))
+            {
+                targetQueue.Add(target);
+            }
+        }
+    }
+    private bool IsPositionValid(Vector2Int position)
+    {
+        return position.x >= 0 && position.x < 10 && position.y >= 0 && position.y < 10;
+    }
 
     private bool CheckBoardForPlacement(int row, int col, int size, bool hor, Ship ship)
     {
