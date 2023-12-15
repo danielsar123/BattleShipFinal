@@ -232,8 +232,8 @@ public class BoardAI : Board
 
             AssignShipPosition(ship, placeRow, placeCol);
             board[placeRow, placeCol].GetComponentInChildren<BoardUnit>().occupied = true;
-            GameObject visual = GameObject.Instantiate(cubePrefab, new Vector3(placeRow + 11, 0.4f, placeCol), Quaternion.identity);
-            visual.GetComponent<Renderer>().material.color = Color.yellow;
+            //GameObject visual = GameObject.Instantiate(cubePrefab, new Vector3(placeRow + 11, 0.4f, placeCol), Quaternion.identity);
+           // visual.GetComponent<Renderer>().material.color = Color.yellow;
         }
         return true;
     }

@@ -59,7 +59,7 @@ public class BoardUnit : MonoBehaviour
     {
         // Create a new cube GameObject
         cubeInstance = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        cubeInstance.transform.position = transform.position;
+        cubeInstance.transform.position = new Vector3(transform.position.x, transform.position.y - 10, transform.position.z);
     }
 
     // Method to update the cube's color

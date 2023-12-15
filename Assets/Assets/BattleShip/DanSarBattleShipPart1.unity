@@ -385,9 +385,9 @@ MonoBehaviour:
   uiManager: {fileID: 1255971005}
   controller: {fileID: 1812668127}
   shipPanelManager: {fileID: 38525748}
-  BoardUnitPrefab: {fileID: 1721956133909825588, guid: 37725cf8a4f823847aff8ef26388a8e4,
+  BoardUnitPrefab: {fileID: 7018450378064966368, guid: eca0553612024d1438e23b75d7208810,
     type: 3}
-  BoardUnitAttackPrefab: {fileID: 5289048200967833903, guid: 07cfeccb2f2608d47a9e94f9a57e3df9,
+  BoardUnitAttackPrefab: {fileID: 5853519526597187938, guid: ab878699e8c415e4b9d3086284e7a655,
     type: 3}
   BlockVisualizerPrefab: {fileID: 3757695205766869313, guid: 9903f76e82cd5ba4b9d2ef8cedeb7252,
     type: 3}
