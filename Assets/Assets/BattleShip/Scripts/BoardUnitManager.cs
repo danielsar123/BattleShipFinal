@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Burst.CompilerServices;
+using Unity.VisualScripting;
 using UnityEditor.Build.Content;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -20,8 +22,9 @@ public class BoardUnitManager : MonoBehaviour
     private bool isAttackPhase = false;
     public BoardPlayer boardPlayer;
     public BoardAI boardEnemy;
+    public List<Ship> playerShips = new List<Ship>();
 
-   // public int[] ShipSizes = { 2, 3, 3, 4, 5 };
+    // public int[] ShipSizes = { 2, 3, 3, 4, 5 };
     public int ShipSize = 2;
     public bool Vertical = true;
 
@@ -86,12 +89,47 @@ public class BoardUnitManager : MonoBehaviour
         // Now initialize the player board with a reference to the enemy board
         boardPlayer = new BoardPlayer(BoardUnitPrefab, boardEnemy);
         boardPlayer.CreatePlayerBoard();
+        boardEnemy.SetPlayerBoard(boardPlayer);
         boardEnemy.CreateAiBoard();
         boardEnemy.SetBoardPlayer(this);
 
         currentShipID = 0;
         ShipSize = 0;
     }
+    public void HandleEnemyAttack(BoardUnit targetUnit, Ship hitShip)
+    {
+        var bombPosition = targetUnit.transform.position;
+        bombPosition.y += 10;
+        StartCoroutine(EnemyBombDrop(bombPosition));
+        if (hitShip != null)
+        {
+            StartCoroutine(InstantiateFireForPlayerShipVFX(targetUnit.transform.position));
+            if (hitShip.IsSunk())
+            {
+                Debug.Log($"Player{hitShip.Name} has been sunk!");
+                shipPanelManager.UpdateShipPanel(hitShip.Name, true);
+                isAttackPhase = false;
+
+               
+                // Perform any additional actions needed when a ship is sunk
+            }
+            else
+            {
+                Debug.Log($"Player{hitShip.Name} has been hit!");
+                isAttackPhase = false;
+             
+            }
+        }
+        else
+        {
+            Debug.Log("Missed all ships.");
+            
+
+        }
+
+        // Additional logic (e.g., check if the game is over, switch turns, etc.)
+    
+}
 
     public void StartAttackPlayer()
     {
@@ -125,6 +163,18 @@ public class BoardUnitManager : MonoBehaviour
         
        
     }
+    public Ship CheckHit(int row, int col)
+    {
+        foreach (var ship in playerShips)
+        {
+            if (ship.Positions.Contains(new Vector2Int(row, col)))
+            {
+                ship.RegisterHit();
+                return ship;
+            }
+        }
+        return null; // No ship at this position
+    }
 
     private void HandlePlayerAttack()
     {
@@ -152,21 +202,16 @@ public class BoardUnitManager : MonoBehaviour
 
                     // Check if a ship has been hit and if it has sunk
                     Ship hitShip = boardEnemy.CheckHit(enemyUnit.row, enemyUnit.col);
-                    if (hitShip != null && !hitShip.IsSunk())
-                    {
-                        // Instantiate fire prefab on the hit ship's position
-                        // Instantiate the fire VFX with a delay
-                        StartCoroutine(InstantiateFireVFX(hit.transform.position));
-                        isAttackPhase = false;
-                        StartCoroutine(StartEnemyAttack());
-                    }
+         
                     if (hitShip != null)
                     {
+                        StartCoroutine(InstantiateFireVFX(hit.transform.position));
                         if (hitShip.IsSunk())
                         {
                             Debug.Log($"{hitShip.Name} has been sunk!");
                             shipPanelManager.UpdateShipPanel(hitShip.Name, true);
                             isAttackPhase = false;
+                          
                             StartCoroutine(StartEnemyAttack());
                             // Perform any additional actions needed when a ship is sunk
                         }
@@ -198,6 +243,11 @@ public class BoardUnitManager : MonoBehaviour
             }
         }
     }
+    private IEnumerator EnemyBombDrop(Vector3 bombPosition)
+    {
+        yield return new WaitForSeconds(1.2f);
+        Instantiate(bomb, bombPosition, Quaternion.identity);
+    }
     private IEnumerator StartEnemyAttack()
     {
         // Wait for a second
@@ -222,7 +272,14 @@ public class BoardUnitManager : MonoBehaviour
         // Instantiate the fire VFX
         Instantiate(fire, position, Quaternion.identity);
     }
+    private IEnumerator InstantiateFireForPlayerShipVFX(Vector3 position)
+    {
+        // Wait for a second
+        yield return new WaitForSeconds(2.3f);
 
+        // Instantiate the fire VFX
+        Instantiate(fire, position, Quaternion.identity);
+    }
 
     private void PlacePlayerPieces()
     {
@@ -296,6 +353,7 @@ public class BoardUnitManager : MonoBehaviour
 
                     if (PLACE_BLOCK && OK_TO_PLACE && CanPlaceShip(tmpUI.row, tmpUI.col, Vertical, ShipSize))
                     {
+                        Ship newShip = new Ship($"Ship{currentShipID}", ShipSize);
                         // Place the ship on the board
                         for (int i = 0; i < ShipSize; i++)
                         {
@@ -307,9 +365,11 @@ public class BoardUnitManager : MonoBehaviour
                             bu.occupied = true;
                             bu.GetComponent<MeshRenderer>().material.color = Color.green;
                             boardPlayer.board[row, col] = sB;
+                            newShip.AddPosition(row, col);
                         }
 
                         CheckWhichShipWasPlaced(tmpUI.row, tmpUI.col); // Existing logic for checking which ship is placed
+                        playerShips.Add(newShip);
                         OK_TO_PLACE = true;
                         tmpHighlight = null;
                     }

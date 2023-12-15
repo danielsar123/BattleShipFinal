@@ -6,7 +6,9 @@ public class BoardAI : Board
 {
     GameObject cubePrefab;
     BoardUnitManager player;
+    BoardPlayer playerBoard;
     int[] aiShipSizes = new int[5] { 2, 3, 3, 4, 5 };
+    private List<Vector2Int> attackedPositions = new List<Vector2Int>();
     public List<Ship> Ships { get; private set; }
     public BoardAI(GameObject unitPrefab, GameObject prefab)
     {
@@ -96,8 +98,49 @@ public class BoardAI : Board
     }
     public void EnemyAttack()
     {
+        Debug.Log("enemy attack ");
+        bool validAttack = false;
+        Vector2Int attackPosition = new Vector2Int();
+
+        while (!validAttack)
+        {
+            // Randomly select a position
+            int x = UnityEngine.Random.Range(0, 10);
+            int y = UnityEngine.Random.Range(0, 10);
+            attackPosition = new Vector2Int(x, y);
+
+            // Check if this position has already been attacked
+            if (!attackedPositions.Contains(attackPosition))
+            {
+                validAttack = true;
+            }
+        }
+        ProcessHit(attackPosition);
+        
+
+        attackedPositions.Add(attackPosition);
         player.PlayerTurn();
     }
+    public void SetPlayerBoard(BoardPlayer playerBoard)
+    {
+        this.playerBoard = playerBoard;
+    }
+
+    private void ProcessHit(Vector2Int position)
+    {
+        // Get the BoardUnit at this position from the player's board and process the hit
+        BoardUnit targetUnit = playerBoard.board[position.x, position.y].GetComponentInChildren<BoardUnit>();
+
+        if (targetUnit != null)
+        {
+            targetUnit.ProcessHit(); // You need to define this method in BoardUnit
+            Ship hitShip = player.CheckHit(targetUnit.row, targetUnit.col);
+            player.HandleEnemyAttack(targetUnit, hitShip);
+        }
+      ;
+    }
+
+
     private bool CheckBoardForPlacement(int row, int col, int size, bool hor, Ship ship)
     {
         // Check boundaries and occupancy
