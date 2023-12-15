@@ -5,6 +5,7 @@ using UnityEngine;
 public class BoardAI : Board 
 {
     GameObject cubePrefab;
+    BoardUnitManager player;
     int[] aiShipSizes = new int[5] { 2, 3, 3, 4, 5 };
     public List<Ship> Ships { get; private set; }
     public BoardAI(GameObject unitPrefab, GameObject prefab)
@@ -18,6 +19,10 @@ public class BoardAI : Board
             Ships.Add(new Ship($"Ship{i}", aiShipSizes[i]));
         }
         ClearBoard();
+    }
+    public void SetBoardPlayer(BoardUnitManager bp)
+    {
+        player = bp;
     }
 
     private void AssignShipPosition(Ship ship, int row, int col)
@@ -89,7 +94,10 @@ public class BoardAI : Board
             }
         }
     }
-
+    public void EnemyAttack()
+    {
+        player.PlayerTurn();
+    }
     private bool CheckBoardForPlacement(int row, int col, int size, bool hor, Ship ship)
     {
         // Check boundaries and occupancy

@@ -87,6 +87,7 @@ public class BoardUnitManager : MonoBehaviour
         boardPlayer = new BoardPlayer(BoardUnitPrefab, boardEnemy);
         boardPlayer.CreatePlayerBoard();
         boardEnemy.CreateAiBoard();
+        boardEnemy.SetBoardPlayer(this);
 
         currentShipID = 0;
         ShipSize = 0;
@@ -156,6 +157,8 @@ public class BoardUnitManager : MonoBehaviour
                         // Instantiate fire prefab on the hit ship's position
                         // Instantiate the fire VFX with a delay
                         StartCoroutine(InstantiateFireVFX(hit.transform.position));
+                        isAttackPhase = false;
+                        StartCoroutine(StartEnemyAttack());
                     }
                     if (hitShip != null)
                     {
@@ -163,16 +166,23 @@ public class BoardUnitManager : MonoBehaviour
                         {
                             Debug.Log($"{hitShip.Name} has been sunk!");
                             shipPanelManager.UpdateShipPanel(hitShip.Name, true);
+                            isAttackPhase = false;
+                            StartCoroutine(StartEnemyAttack());
                             // Perform any additional actions needed when a ship is sunk
                         }
                         else
                         {
                             Debug.Log($"{hitShip.Name} has been hit!");
+                            isAttackPhase = false;
+                            StartCoroutine(StartEnemyAttack());
                         }
                     }
                     else
                     {
                         Debug.Log("Missed all ships.");
+                        isAttackPhase = false;
+                        StartCoroutine(StartEnemyAttack());
+
                     }
 
                     // Additional logic (e.g., check if the game is over, switch turns, etc.)
@@ -188,7 +198,22 @@ public class BoardUnitManager : MonoBehaviour
             }
         }
     }
-
+    private IEnumerator StartEnemyAttack()
+    {
+        // Wait for a second
+        yield return new WaitForSeconds(3.5f);
+        controller.SwitchToPlayerView();
+        boardEnemy.EnemyAttack();
+    }
+    public void PlayerTurn()
+    {
+        StartCoroutine(SwitchToPlayerTurn());
+    }
+    public IEnumerator SwitchToPlayerTurn()
+    {
+        yield return new WaitForSeconds(3.5f);
+        isAttackPhase = true;
+    }
     private IEnumerator InstantiateFireVFX(Vector3 position)
     {
         // Wait for a second
