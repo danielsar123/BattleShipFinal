@@ -1,0 +1,7 @@
+Setup and Use:
+
+To simulate erosion, assign the "Erosion" component to your terrain press Run Simulation. If you 
+are not happy with the results, you can press "Restore Heightmap" to reverse the changes and adjust
+the parameters as you need.
+
+For best results, set the Heightmap Resolution on the terrain to "1025" or higher;

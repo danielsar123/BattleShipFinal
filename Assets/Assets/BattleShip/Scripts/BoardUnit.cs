@@ -28,11 +28,7 @@ public class BoardUnit : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Check if the cube needs to be instantiated or updated
-        if (cubeInstance != null)
-        {
-            UpdateColor();
-        }
+        
     }
 
     public void SetShip(Ship ship)
@@ -45,13 +41,11 @@ public class BoardUnit : MonoBehaviour
     {
         // Set the hit flag depending on whether the unit was occupied
         hit = occupied;
+        tmpBoardUnitLabel.text = "X"; // Set the text to "X"
+        tmpBoardUnitLabel.color = Color.red; // Set the text color to red
+        tmpBoardUnitLabel.fontSize = 36; // Adjust the font size as needed
 
-        // Check if a cube has not been instantiated
-        if (!cubeInstance)
-        {
-            CreateCube(); // Instantiate a cube for both hit and miss
-        }
-        UpdateColor(); // Update its color based on whether it's a hit or miss
+        // UpdateColor(); // Update its color based on whether it's a hit or miss
     }
 
     // Method to create a cube with the specified color

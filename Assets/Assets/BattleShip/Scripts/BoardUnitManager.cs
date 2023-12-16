@@ -94,7 +94,7 @@ public class BoardUnitManager : MonoBehaviour
         // Initialize the enemy board first
         boardEnemy = new BoardAI(BoardUnitAttackPrefab, BlockVisualizerPrefab);
 
-        originalFontSize = 11;
+        originalFontSize = 30;
         // Now initialize the player board with a reference to the enemy board
         boardPlayer = new BoardPlayer(BoardUnitPrefab, boardEnemy);
         boardPlayer.CreatePlayerBoard();
@@ -102,7 +102,7 @@ public class BoardUnitManager : MonoBehaviour
         boardEnemy.CreateAiBoard();
         boardEnemy.SetBoardPlayer(this);
 
-        currentShipID = 0;
+        currentShipID = -1;
         ShipSize = 0;
     }
 
@@ -124,7 +124,6 @@ public class BoardUnitManager : MonoBehaviour
                 playerSunkShips++;
                 UpdateUI(ScoreType.Enemy);
                 Debug.Log($"Player{hitShip.Name} has been sunk!");
-                shipPanelManager.UpdateShipPanel(hitShip.Name, true);
                 isAttackPhase = false;
 
                
@@ -325,7 +324,10 @@ public class BoardUnitManager : MonoBehaviour
 
     private void PlacePlayerPieces()
     {
-       
+        if (currentShipID == -1)
+        {
+            return; // No ship selected, so return early
+        }
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
         if (Input.mousePosition != null)
@@ -560,15 +562,13 @@ public class BoardUnitManager : MonoBehaviour
     }
     private IEnumerator PopOutScore(TextMeshProUGUI scoreText, ScoreType scoreType)
     {
-        int popFontSize = originalFontSize + 60; // The font size to pop out to, adjust as needed
+        int popFontSize = originalFontSize + 50; // The font size to pop out to, adjust as needed
         float animationTime = 1.3f; // Duration of the animation, adjust as needed
         float time = 0;
         audioSource.PlayOneShot(popSoundEffect);
         // Increase font size instantly
-        if (ScoreType.Player == scoreType)
-        {
-            scoreText.fontSize = popFontSize;
-        }
+        scoreText.fontSize = popFontSize;
+        
         // Animate font size back to original
         while (time < animationTime)
         {
