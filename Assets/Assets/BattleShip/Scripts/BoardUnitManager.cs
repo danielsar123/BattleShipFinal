@@ -32,6 +32,7 @@ public class BoardUnitManager : MonoBehaviour
     private int originalFontSize;
     public AudioSource audioSource;
     public AudioClip popSoundEffect;
+    private List<Vector2Int> missedPositions = new List<Vector2Int>();
 
     // public int[] ShipSizes = { 2, 3, 3, 4, 5 };
     public int ShipSize = 2;
@@ -226,61 +227,72 @@ public class BoardUnitManager : MonoBehaviour
 
             if (Physics.Raycast(ray, out hit))
             {
-                // Check if the raycast hit an enemy board unit
-                BoardUnit enemyUnit = hit.transform.GetComponent<BoardUnit>();
-                if (enemyUnit != null && !enemyUnit.hit) // Additional check to ensure unit hasn't already been hit
+                if (hit.collider.CompareTag("EnemyBoardUnit"))
                 {
-                    Debug.Log("Clicked on an enemy board unit!");
-                    enemyUnit.ProcessHit(); // Process the hit on the enemy unit
-
-                    // Instantiate the bomb at the clicked position
-                    Vector3 bombPosition = new Vector3(hit.point.x, 9, hit.point.z); // Adjust the Y value as needed
-                    Instantiate(bomb, bombPosition, Quaternion.identity);
-
-                
-
-                    // Check if a ship has been hit and if it has sunk
-                    Ship hitShip = boardEnemy.CheckHit(enemyUnit.row, enemyUnit.col);
-         
-                    if (hitShip != null)
+                    // Check if the raycast hit an enemy board unit
+                    BoardUnit enemyUnit = hit.transform.GetComponent<BoardUnit>();
+                    Vector2Int attackPosition = new Vector2Int(enemyUnit.row, enemyUnit.col);
+                    if (enemyUnit != null && !enemyUnit.hit) // Additional check to ensure unit hasn't already been hit
                     {
-                        StartCoroutine(InstantiateFireVFX(hit.transform.position));
-                        if (hitShip.IsSunk())
+                        Debug.Log("Clicked on an enemy board unit!");
+                        enemyUnit.ProcessHit(); // Process the hit on the enemy unit
+
+                        // Instantiate the bomb at the clicked position
+                        Vector3 bombPosition = new Vector3(hit.point.x, 9, hit.point.z); // Adjust the Y value as needed
+                        if (!missedPositions.Contains(attackPosition))
                         {
-                            enemySunkShips++;
-                            UpdateUI(ScoreType.Player);
-                            Debug.Log($"{hitShip.Name} has been sunk!");
-                            shipPanelManager.UpdateShipPanel(hitShip.Name, true);
-                            isAttackPhase = false;
-                          
-                            StartCoroutine(StartEnemyAttack());
-                            // Perform any additional actions needed when a ship is sunk
+                            Instantiate(bomb, bombPosition, Quaternion.identity);
                         }
-                        else
+
+
+                        // Check if a ship has been hit and if it has sunk
+                        Ship hitShip = boardEnemy.CheckHit(enemyUnit.row, enemyUnit.col);
+
+                        if (hitShip != null)
                         {
-                            Debug.Log($"{hitShip.Name} has been hit!");
-                            isAttackPhase = false;
-                            StartCoroutine(StartEnemyAttack());
+                            StartCoroutine(InstantiateFireVFX(hit.transform.position));
+                            if (hitShip.IsSunk())
+                            {
+                                enemySunkShips++;
+                                UpdateUI(ScoreType.Player);
+                                Debug.Log($"{hitShip.Name} has been sunk!");
+                                shipPanelManager.UpdateShipPanel(hitShip.Name, true);
+                                isAttackPhase = false;
+
+                                StartCoroutine(StartEnemyAttack());
+                                // Perform any additional actions needed when a ship is sunk
+                            }
+                            else 
+                            {
+                                Debug.Log($"{hitShip.Name} has been hit!");
+                                isAttackPhase = false;
+                                StartCoroutine(StartEnemyAttack());
+                            }
                         }
+                        else if (!(missedPositions.Contains(attackPosition)))
+                        {
+                            Debug.Log("Missed all ships.");
+                            isAttackPhase = false;
+                            missedPositions.Add(attackPosition);
+                            StartCoroutine(StartEnemyAttack());
+
+                        }
+                        else if (missedPositions.Contains(attackPosition))
+                        {
+                            Debug.Log("Please try another target");
+                        }
+
+                        // Additional logic (e.g., check if the game is over, switch turns, etc.)
                     }
                     else
                     {
-                        Debug.Log("Missed all ships.");
-                        isAttackPhase = false;
-                        StartCoroutine(StartEnemyAttack());
-
+                        Debug.Log("Clicked, but not on an enemy board unit.");
                     }
-
-                    // Additional logic (e.g., check if the game is over, switch turns, etc.)
                 }
                 else
                 {
-                    Debug.Log("Clicked, but not on an enemy board unit.");
+                    Debug.Log("Raycast didn't hit anything when clicked.");
                 }
-            }
-            else
-            {
-                Debug.Log("Raycast didn't hit anything when clicked.");
             }
         }
     }
@@ -407,7 +419,7 @@ public class BoardUnitManager : MonoBehaviour
                             GameObject sB = boardPlayer.board[row, col];
                             BoardUnit bu = sB.transform.GetComponentInChildren<BoardUnit>();
                             bu.occupied = true;
-                            bu.GetComponent<MeshRenderer>().material.color = Color.green;
+                          //  bu.GetComponent<MeshRenderer>().material.color = Color.green;
                             boardPlayer.board[row, col] = sB;
                             newShip.AddPosition(row, col);
                         }

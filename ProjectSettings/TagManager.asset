@@ -8,6 +8,7 @@ TagManager:
   - CubePrefab
   - PlayerBoardUnit
   - ShipButton
+  - EnemyBoardUnit
   layers:
   - Default
   - TransparentFX
