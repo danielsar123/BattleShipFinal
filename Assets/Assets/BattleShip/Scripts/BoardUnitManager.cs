@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Burst.CompilerServices;
 using Unity.VisualScripting;
-using UnityEditor.Build.Content;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
 
@@ -168,9 +168,23 @@ public class BoardUnitManager : MonoBehaviour
         // Trigger the pop-out effect for the updated score
         StopCoroutine(PopOutScore(scoreText, scoreType)); // Stop if already running
         StartCoroutine(PopOutScore(scoreText, scoreType));
-
+        if(enemySunkShips == 5)
+        {
+            StartCoroutine(LoadEndGameScene("YOU WON!"));
+        }
+        if(playerSunkShips == 5)
+        {
+            StartCoroutine(LoadEndGameScene("YOU LOST!"));
+        }
     }
 
+    private IEnumerator LoadEndGameScene(string result)
+    {
+        yield return new WaitForSeconds(3f);
+        // Save the result to use in the endgame scene
+        PlayerPrefs.SetString("endGameResult", result);
+        SceneManager.LoadScene("EndGame"); // Replace with your endgame scene name
+    }
     public void StartAttackPlayer()
     {
         uiManager.EnablePieceButtonsForAttackPhase();
