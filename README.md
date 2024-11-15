@@ -17,8 +17,8 @@ A modern take on the classic Battleship game with dynamic visuals, sound effects
 - **Unity Asset Store**: Various assets, such as bomb and explosion effects, were sourced to enhance the visual and audio experience.
 - **Git**: Version control to manage and track project changes.
 ## Gameplay Screenshots
+![EnemyTurn](https://github.com/user-attachments/assets/8a488b32-3b3a-4fc9-afd4-964750e43ecd)
+![playerturn](https://github.com/user-attachments/assets/fb25cce2-c093-4c05-a365-c3be13b0020d)
+![MainMenu](https://github.com/user-attachments/assets/d3d97026-4a23-4cf2-a869-685911f5768a)
 
-![Screenshot 2024-11-14 212039](https://github.com/user-attachments/assets/0677b2cb-c549-4470-8fcd-59397cb0e244)
-![Screenshot 2024-11-14 212545](https://github.com/user-attachments/assets/ff6f45f4-9f74-4055-8f34-5ac0ea990b78)
-![Screenshot 2024-11-14 212355](https://github.com/user-attachments/assets/d37d3df7-bc39-496e-8f37-4398dcae85b8)
 
